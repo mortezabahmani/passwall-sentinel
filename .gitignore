@@ -1,0 +1,6 @@
+# passwall-sentinel .gitignore
+*.tmp
+*.log
+*~
+.DS_Store
+/var/run/

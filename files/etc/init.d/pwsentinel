@@ -1,0 +1,55 @@
+#!/bin/sh /etc/rc.common
+# Procd service for passwall-sentinel
+
+USE_PROCD=1
+START=95
+STOP=10
+
+CRON_FILE="/etc/crontabs/root"
+
+setup_cron() {
+    local enabled=$(uci -q get pwsentinel.main.enabled || echo "0")
+    local interval=$(uci -q get pwsentinel.main.check_interval || echo "6h")
+    
+    # Remove existing pwsentinel cron entries
+    [ -f "$CRON_FILE" ] && sed -i '/pwsentinel/d' "$CRON_FILE"
+
+    if [ "$enabled" = "1" ]; then
+        # Parse interval: 1h, 6h, 12h, 1d, 1w
+        local cron_expr="0 */6 * * *"
+        case "$interval" in
+            1h)  cron_expr="0 * * * *" ;;
+            2h)  cron_expr="0 */2 * * *" ;;
+            6h)  cron_expr="0 */6 * * *" ;;
+            12h) cron_expr="0 */12 * * *" ;;
+            1d)  cron_expr="0 4 * * *" ;;
+            1w)  cron_expr="0 4 * * 0" ;;
+        esac
+
+        mkdir -p /etc/crontabs
+        echo "$cron_expr /usr/bin/pwsentinel check >/dev/null 2>&1" >> "$CRON_FILE"
+        echo "*/2 * * * * /usr/bin/pwsentinel failsafe >/dev/null 2>&1" >> "$CRON_FILE"
+        /etc/init.d/cron restart >/dev/null 2>&1
+    fi
+}
+
+start_service() {
+    local enabled=$(uci -q get pwsentinel.main.enabled || echo "0")
+    [ "$enabled" != "1" ] && return 0
+
+    setup_cron
+
+    procd_open_instance "pwsentinel_watchdog"
+    procd_set_param command /bin/sh -c "while true; do /usr/bin/pwsentinel failsafe; sleep 120; done"
+    procd_set_param respawn 3600 5 0
+    procd_close_instance
+}
+
+stop_service() {
+    [ -f "$CRON_FILE" ] && sed -i '/pwsentinel/d' "$CRON_FILE"
+    /etc/init.d/cron restart >/dev/null 2>&1
+}
+
+service_triggers() {
+    procd_add_reload_trigger "pwsentinel"
+}

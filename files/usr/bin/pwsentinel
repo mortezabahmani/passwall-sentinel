@@ -1,0 +1,51 @@
+#!/bin/sh
+# passwall-sentinel - Main CLI Orchestrator
+
+SHARE_DIR="/usr/share/pwsentinel"
+
+show_help() {
+    cat << EOF
+passwall-sentinel - Intelligent Failsafe & Optimizer for PassWall 2 / OpenWrt
+Usage: pwsentinel <command> [options]
+
+Commands:
+    check           Run full isolated benchmark (Nodes + 50 DNS)
+    test-nodes      Benchmark PassWall 2 nodes in isolated mode
+    test-dns        Benchmark 50 DNS providers (Direct WAN)
+    status          Display current PassWall 2 state and latest recommendations
+    apply           Apply the best recommended node and DNS with armed rollback
+    rollback        Revert PassWall 2 to previous safety snapshot
+    failsafe        Run emergency connectivity check
+    version         Show version information
+
+Options:
+    --auto          Force auto-apply regardless of UCI config
+    --quiet         Minimal output (ideal for cron jobs)
+EOF
+}
+
+case "$1" in
+    check|test-nodes|test-dns|status|apply)
+        lua /usr/share/pwsentinel/main.lua "$1" "$2"
+        ;;
+    rollback)
+        lua -e '
+            package.path = package.path .. ";/usr/share/?.lua;/usr/share/pwsentinel/?.lua"
+            local apply_mod = require("pwsentinel.apply")
+            if apply_mod.restore_backup() then
+                print("Successfully rolled back PassWall 2 to previous snapshot.")
+            else
+                print("Error: No backup snapshot found to rollback.")
+            end
+        '
+        ;;
+    failsafe)
+        /bin/sh "${SHARE_DIR}/failsafe.sh"
+        ;;
+    version)
+        echo "passwall-sentinel v1.0.0 (OpenWrt/APK/OPKG compatible)"
+        ;;
+    *)
+        show_help
+        ;;
+esac

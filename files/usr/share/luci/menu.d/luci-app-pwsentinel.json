@@ -1,0 +1,14 @@
+{
+	"admin/services/pwsentinel": {
+		"title": "PassWall Sentinel",
+		"order": 55,
+		"action": {
+			"type": "view",
+			"path": "pwsentinel/overview"
+		},
+		"depends": {
+			"acl": [ "luci-app-pwsentinel" ],
+			"uci": { "pwsentinel": true }
+		}
+	}
+}
