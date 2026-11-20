@@ -253,13 +253,26 @@ return view.extend({
 				if (btnBench) {
 					btnBench.addEventListener('click', function(ev) {
 						ev.preventDefault();
+						var outputPre = E('pre', {
+							'style': 'max-height:420px; overflow-y:auto; background:#181818; color:#38ef7d; padding:12px; border-radius:6px; font-size:0.85em; font-family:monospace; white-space:pre-wrap; margin-top:10px;'
+						}, _('Initiating isolated direct WAN benchmark...\n'));
+
 						ui.showModal(_('Running Isolated Benchmark...'), [
-							E('p', { 'class': 'spinning' }, _('Benchmarking PassWall nodes and 50 direct DNS servers directly via WAN. This will take ~20-30 seconds...')),
+							E('p', { 'class': 'spinning' }, _('Benchmarking PassWall nodes and 50 direct DNS servers directly via WAN. Please wait...')),
+							outputPre
 						]);
-						fs.exec('/usr/bin/pwsentinel', ['check']).then(function(res) {
+
+						fs.exec_direct('/usr/bin/pwsentinel', ['check'], 'text', false, true, function(xhr) {
+							if (xhr.responseText) {
+								outputPre.textContent = xhr.responseText;
+								outputPre.scrollTop = outputPre.scrollHeight;
+							}
+						}).then(function(res) {
+							outputPre.textContent = res || _('Benchmark finished successfully.');
+							outputPre.scrollTop = outputPre.scrollHeight;
 							ui.showModal(_('Benchmark Finished'), [
-								E('pre', { 'style': 'max-height:400px; overflow-y:auto; background:#1e1e1e; color:#eee; padding:10px; border-radius:4px; font-size:0.9em;' }, res.stdout || res.stderr || 'No output'),
-								E('div', { 'class': 'right' }, [
+								outputPre,
+								E('div', { 'class': 'right', 'style': 'margin-top:12px;' }, [
 									E('button', {
 										'class': 'btn btn-primary',
 										'click': function() { location.reload(); }
@@ -267,7 +280,7 @@ return view.extend({
 								])
 							]);
 						}).catch(function(err) {
-							ui.addNotification(null, E('p', _('Benchmark failed: ') + err.message), 'error');
+							ui.addNotification(null, E('p', _('Benchmark failed: ') + (err.message || err)), 'error');
 							ui.hideModal();
 						});
 					});
@@ -279,10 +292,10 @@ return view.extend({
 						ui.showModal(_('Applying Recommendation...'), [
 							E('p', { 'class': 'spinning' }, _('Applying best node and DNS to PassWall 2 with 60-second armed rollback...')),
 						]);
-						fs.exec('/usr/bin/pwsentinel', ['apply']).then(function(res) {
+						fs.exec_direct('/usr/bin/pwsentinel', ['apply'], 'text').then(function(res) {
 							ui.showModal(_('Apply Result'), [
-								E('pre', { 'style': 'padding:10px; background:#f8f9fa; border:1px solid #ddd;' }, res.stdout || res.stderr || 'Success'),
-								E('div', { 'class': 'right' }, [
+								E('pre', { 'style': 'padding:10px; background:#f8f9fa; border:1px solid #ddd; white-space:pre-wrap;' }, res || 'Success'),
+								E('div', { 'class': 'right', 'style': 'margin-top:12px;' }, [
 									E('button', {
 										'class': 'btn btn-primary',
 										'click': function() { location.reload(); }
@@ -290,7 +303,7 @@ return view.extend({
 								])
 							]);
 						}).catch(function(err) {
-							ui.addNotification(null, E('p', _('Apply failed: ') + err.message), 'error');
+							ui.addNotification(null, E('p', _('Apply failed: ') + (err.message || err)), 'error');
 							ui.hideModal();
 						});
 					});
@@ -300,9 +313,11 @@ return view.extend({
 					btnRollback.addEventListener('click', function(ev) {
 						ev.preventDefault();
 						if (!confirm(_('Are you sure you want to rollback PassWall 2 to the previous safety snapshot?'))) return;
-						fs.exec('/usr/bin/pwsentinel', ['rollback']).then(function(res) {
-							ui.addNotification(null, E('p', res.stdout || _('Rollback executed successfully.')), 'info');
+						fs.exec_direct('/usr/bin/pwsentinel', ['rollback'], 'text').then(function(res) {
+							ui.addNotification(null, E('p', res || _('Rollback executed successfully.')), 'info');
 							setTimeout(function() { location.reload(); }, 1500);
+						}).catch(function(err) {
+							ui.addNotification(null, E('p', _('Rollback failed: ') + (err.message || err)), 'error');
 						});
 					});
 				}

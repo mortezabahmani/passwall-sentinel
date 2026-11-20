@@ -2,22 +2,30 @@
 	"luci-app-pwsentinel": {
 		"description": "Grant UCI and execution access for passwall-sentinel LuCI app",
 		"read": {
+			"cgi-io": [ "exec" ],
 			"uci": [ "pwsentinel", "passwall2" ],
 			"file": {
-				"/var/run/pwsentinel/*": [ "read" ]
+				"/var/run/pwsentinel/*": [ "read" ],
+				"/usr/bin/pwsentinel": [ "exec" ],
+				"/usr/bin/pwsentinel *": [ "exec" ]
+			},
+			"ubus": {
+				"file": [ "exec" ]
 			}
 		},
 		"write": {
+			"cgi-io": [ "exec" ],
 			"uci": [ "pwsentinel", "passwall2" ],
 			"file": {
-				"/var/run/pwsentinel/*": [ "write" ]
+				"/var/run/pwsentinel/*": [ "write" ],
+				"/usr/bin/pwsentinel": [ "exec" ],
+				"/usr/bin/pwsentinel *": [ "exec" ],
+				"/etc/init.d/pwsentinel": [ "exec" ],
+				"/etc/init.d/pwsentinel *": [ "exec" ]
+			},
+			"ubus": {
+				"file": [ "exec" ]
 			}
-		},
-		"exec": {
-			"/usr/bin/pwsentinel": [ "exec" ],
-			"/usr/bin/pwsentinel *": [ "exec" ],
-			"/etc/init.d/pwsentinel restart": [ "exec" ],
-			"/etc/init.d/pwsentinel reload": [ "exec" ]
 		}
 	}
 }
