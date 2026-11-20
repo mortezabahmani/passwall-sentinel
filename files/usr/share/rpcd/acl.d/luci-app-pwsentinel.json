@@ -6,25 +6,27 @@
 			"uci": [ "pwsentinel", "passwall2" ],
 			"file": {
 				"/var/run/pwsentinel/*": [ "read" ],
+				"/tmp/run/pwsentinel/*": [ "read" ],
 				"/usr/bin/pwsentinel": [ "exec" ],
 				"/usr/bin/pwsentinel *": [ "exec" ]
 			},
 			"ubus": {
-				"file": [ "exec" ]
+				"file": [ "read", "exec" ]
 			}
 		},
 		"write": {
 			"cgi-io": [ "exec" ],
 			"uci": [ "pwsentinel", "passwall2" ],
 			"file": {
-				"/var/run/pwsentinel/*": [ "write" ],
+				"/var/run/pwsentinel/*": [ "read", "write" ],
+				"/tmp/run/pwsentinel/*": [ "read", "write" ],
 				"/usr/bin/pwsentinel": [ "exec" ],
 				"/usr/bin/pwsentinel *": [ "exec" ],
 				"/etc/init.d/pwsentinel": [ "exec" ],
 				"/etc/init.d/pwsentinel *": [ "exec" ]
 			},
 			"ubus": {
-				"file": [ "exec" ]
+				"file": [ "read", "write", "exec" ]
 			}
 		}
 	}

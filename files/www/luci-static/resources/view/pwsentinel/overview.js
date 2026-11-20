@@ -10,7 +10,9 @@ return view.extend({
 		return Promise.all([
 			uci.load('pwsentinel'),
 			uci.load('passwall2'),
-			fs.read('/var/run/pwsentinel/latest_benchmark.json').then(function(content) {
+			fs.read('/var/run/pwsentinel/latest_benchmark.json').catch(function() {
+				return fs.read('/tmp/run/pwsentinel/latest_benchmark.json');
+			}).then(function(content) {
 				try {
 					return JSON.parse(content);
 				} catch(e) {
@@ -137,9 +139,9 @@ return view.extend({
 						'<td class="td">' + badge + '</td>' +
 						'<td class="td"><strong>' + (n.remarks || 'Unknown') + '</strong><br><small style="color:#888;">ID: ' + n.id + '</small></td>' +
 						'<td class="td">' + (n.protocol || '-') + ' / ' + (n.transport || 'raw') + '</td>' +
-						'<td class="td">' + (n.tcp_rtt ? n.tcp_rtt.toFixed(1) + ' ms' : 'N/A') + '</td>' +
-						'<td class="td">' + (n.ttfb ? n.ttfb.toFixed(1) + ' ms' : 'N/A') + '</td>' +
-						'<td class="td">' + (n.score ? n.score.toFixed(1) : 'N/A') + '</td>' +
+						'<td class="td">' + (typeof(n.tcp_rtt) === 'number' ? n.tcp_rtt.toFixed(1) + ' ms' : 'N/A') + '</td>' +
+						'<td class="td">' + (typeof(n.ttfb) === 'number' ? n.ttfb.toFixed(1) + ' ms' : (n.ttfb || 'N/A')) + '</td>' +
+						'<td class="td">' + (typeof(n.score) === 'number' ? n.score.toFixed(1) : 'N/A') + '</td>' +
 						'<td class="td">' + (n.status === 'OK' ? '<span style="color:#28a745;">✔ OK</span>' : '<span style="color:#dc3545;">✖ ' + n.status + '</span>') + '</td>' +
 					'</tr>';
 				}
@@ -180,14 +182,14 @@ return view.extend({
 				var udp_str = '-';
 				if (d.udp_status === 'POISONED') {
 					udp_str = '<span style="color:#dc3545;font-weight:bold;">POISONED (Fake IP)</span>';
-				} else if (d.udp_status === 'OK' && d.udp_time) {
+				} else if (d.udp_status === 'OK' && typeof(d.udp_time) === 'number') {
 					udp_str = '<span style="color:#28a745;">' + d.udp_time.toFixed(1) + ' ms</span>';
 				} else {
 					udp_str = '<span style="color:#6c757d;">' + (d.udp_status || 'TIMEOUT') + '</span>';
 				}
 
-				var tcp_str = d.tcp_status === 'OK' && d.tcp_time ? d.tcp_time.toFixed(1) + ' ms' : '<span style="color:#6c757d;">' + (d.tcp_status || 'FAIL') + '</span>';
-				var doh_str = d.doh_status === 'OK' && d.doh_time ? '<span style="color:#17a2b8;">' + d.doh_time.toFixed(1) + ' ms</span>' : '<span style="color:#6c757d;">' + (d.doh_status || 'N/A') + '</span>';
+				var tcp_str = d.tcp_status === 'OK' && typeof(d.tcp_time) === 'number' ? d.tcp_time.toFixed(1) + ' ms' : '<span style="color:#6c757d;">' + (d.tcp_status || 'FAIL') + '</span>';
+				var doh_str = d.doh_status === 'OK' && typeof(d.doh_time) === 'number' ? '<span style="color:#17a2b8;">' + d.doh_time.toFixed(1) + ' ms</span>' : '<span style="color:#6c757d;">' + (d.doh_status || 'N/A') + '</span>';
 
 				html += '<tr class="tr cbi-section-table-row" style="' + d_style + '">' +
 					'<td class="td"><strong>' + d.name + '</strong></td>' +
