@@ -4,7 +4,7 @@
 [![OpenWrt](https://img.shields.io/badge/OpenWrt-19.07%20--%2025.x%2B-blue.svg?logo=openwrt&logoColor=white)](https://openwrt.org)
 [![Platform](https://img.shields.io/badge/Architecture-Universal%20(ARM%20%7C%20MIPS%20%7C%20x86)-orange.svg)]()
 [![Interface](https://img.shields.io/badge/LuCI-Modern%20JS%20Web%20UI-green.svg)]()
-[![License](https://img.shields.io/badge/License-MIT-purple.svg)](LICENSE)
+[![License: CC BY-NC-SA 4.0](https://img.shields.io/badge/License-CC%20BY--NC--SA%204.0-red.svg)](LICENSE)
 
 [**English Documentation**](README.md)
 
@@ -165,6 +165,13 @@ config settings 'main'
 
 ---
 
-## 📄 لایسنس
+## 📄 لایسنس و شرایط استفاده
 
-این پروژه تحت لایسنس **MIT** منتشر شده و برای تمامی کاربران آزاد و رایگان است.
+این پروژه تحت لایسنس **Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International (CC BY-NC-SA 4.0)** منتشر شده است:
+
+- **✅ استفاده و تغییر آزاد:** استفاده، شخصی‌سازی و توسعه این پروژه برای اهداف شخصی و جامعه آزاد و مجاز است.
+- **🚫 ممنوعیت فروش و استفاده تجاری:** هیچ شخص یا مجموعه‌ای حق فروش مستقیم، تجاری‌سازی، دریافت هزینه یا گنجاندن این ابزار در پکیج‌های پولی را ندارد.
+- **🔗 لزوم رفرنس و حفظ حق کپی‌رایت:** در صورت استفاده از بخشی یا تمام کد در هر پروژه دیگری، باید به سازنده اصلی (**مرتضی بهمنی**) و لینک مخزن ([mortezabahmani/passwall-sentinel](https://github.com/mortezabahmani/passwall-sentinel)) رفرنس داده شود.
+- **🔄 انتشار با لایسنس مشابه (ShareAlike):** هر پروژه یا ابزاری که بر پایه این کد ساخته یا ویرایش شود، ملزم به انتشار رایگان تحت همین لایسنس (CC BY-NC-SA 4.0) است.
+
+متن رسمی لایسنس در فایل [LICENSE](LICENSE) قرار دارد.

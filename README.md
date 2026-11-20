@@ -5,7 +5,7 @@
 [![OpenWrt](https://img.shields.io/badge/OpenWrt-19.07%20--%2025.x%2B-blue.svg?logo=openwrt&logoColor=white)](https://openwrt.org)
 [![Platform](https://img.shields.io/badge/Architecture-Universal%20(ARM%20%7C%20MIPS%20%7C%20x86)-orange.svg)]()
 [![Interface](https://img.shields.io/badge/LuCI-Modern%20JS%20Web%20UI-green.svg)]()
-[![License](https://img.shields.io/badge/License-MIT-purple.svg)](LICENSE)
+[![License: CC BY-NC-SA 4.0](https://img.shields.io/badge/License-CC%20BY--NC--SA%204.0-red.svg)](LICENSE)
 
 [**فارسی (Persian Documentation)**](README.fa.md)
 
@@ -163,5 +163,12 @@ config settings 'main'
 ---
 
 ## 📄 License
-MIT License. Free for personal and community use.
-Contribute and share with the OpenWrt anti-censorship community!
+
+This project is licensed under the **Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International (CC BY-NC-SA 4.0)** license:
+
+- **✅ Free to Use & Modify:** You are welcome to use, adapt, and build upon this code for personal, community, and non-commercial projects.
+- **🚫 Strictly Non-Commercial:** No one is permitted to sell, monetize, or bundle this software or derivative works for commercial advantage or monetary compensation.
+- **🔗 Attribution Required:** Any reuse, modification, or inclusion in other projects must retain clear attribution to the original creator (**Morteza Bahmani**) and a link to this repository ([mortezabahmani/passwall-sentinel](https://github.com/mortezabahmani/passwall-sentinel)).
+- **🔄 ShareAlike:** If you alter, transform, or build upon the material, you must distribute your contributions under the same CC BY-NC-SA 4.0 license.
+
+For the full legal code, see the [LICENSE](LICENSE) file.
