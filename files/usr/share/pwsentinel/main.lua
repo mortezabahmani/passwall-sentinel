@@ -84,8 +84,14 @@ if action == "check" then
     if dns_res.best_doh then
         print(string.format("🛡️  Best Remote DoH: %s (%.1fms)", dns_res.best_doh.name, dns_res.best_doh.doh_time or 0))
     end
-    if dns_res.best_direct then
-        print(string.format("⚡ Best Direct Domestic DNS: %s (%.1fms)", dns_res.best_direct.name, dns_res.best_direct.udp_time or 0))
+    if dns_res.best_tcp then
+        print(string.format("🚀 Best Direct TCP: %s (%.1fms)", dns_res.best_tcp.name, dns_res.best_tcp.tcp_time or 0))
+    end
+    if dns_res.best_udp then
+        print(string.format("⚡ Best Direct UDP: %s (%.1fms)", dns_res.best_udp.name, dns_res.best_udp.udp_time or 0))
+    end
+    if dns_res.best_domestic then
+        print(string.format("🇮🇷 Best Iranian DNS: %s (%.1fms)", dns_res.best_domestic.name, dns_res.best_domestic.udp_time or 0))
     end
     print("================================================================================")
 
@@ -94,6 +100,9 @@ if action == "check" then
         timestamp = os.date("%Y-%m-%d %H:%M:%S"),
         best_node = node_res.best_node,
         best_doh = dns_res.best_doh,
+        best_tcp = dns_res.best_tcp,
+        best_udp = dns_res.best_udp,
+        best_domestic = dns_res.best_domestic,
         best_direct = dns_res.best_direct,
         nodes = node_res.candidates or {},
         total_nodes = node_res.total_nodes or 0,

@@ -106,19 +106,23 @@ function M.run(opts)
     -- Sort active nodes by TCP RTT
     table.sort(active_nodes, function(a, b) return a.tcp_rtt < b.tcp_rtt end)
 
+    -- 3. Phase 2: Deep test candidates until we reach target working nodes
+    local target_working = math.min(max_candidates, #active_nodes)
+    local max_attempts = math.min(target_working * 3, #active_nodes) -- guard against infinite loop if many fail
+    local candidates = {}
+    local tested_count = 0
+
     if not opts.quiet then
         print(string.format("Phase 1 completed: %d/%d nodes reachable.", #active_nodes, #nodes))
-        print(string.format("Phase 2: Deep censorship bypass test on top %d candidates...", math.min(max_candidates, #active_nodes)))
+        print(string.format("Phase 2: Deep censorship bypass test (seeking top %d working candidates)...", target_working))
         print(string.format("%-38s | %-12s | %-12s | %-10s", "Node Name", "TCP Ping", "TTFB (Real)", "Score"))
         print(string.rep("-", 78))
     end
 
-    -- 3. Phase 2: Deep test top candidates
-    local candidates = {}
-    local count = 0
     for _, n in ipairs(active_nodes) do
-        count = count + 1
-        if count > max_candidates then break end
+        if #candidates >= target_working then break end
+        tested_count = tested_count + 1
+        if tested_count > max_attempts then break end
 
         local ttfb, status = deep_test_node(n.id)
         n.ttfb = ttfb

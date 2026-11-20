@@ -77,6 +77,9 @@ function M.run(opts)
     local iface = opts.iface or "wan"
     local results = {}
     local best_doh = nil
+    local best_tcp = nil
+    local best_udp = nil
+    local best_domestic = nil
     local best_direct = nil
 
     if not opts.quiet then
@@ -105,19 +108,27 @@ function M.run(opts)
 
         -- Evaluate best DoH (foreign, working, lowest latency)
         if d_status == "OK" and d_time then
-            if not best_doh or d_time < best_doh.doh_time then
+            if not best_doh or d_time < (best_doh.doh_time or 9999) then
                 best_doh = entry
             end
         end
 
-        -- Evaluate best direct DNS (domestic preferred, not poisoned, lowest UDP latency)
+        -- Evaluate best TCP (clean, working, lowest latency)
+        if t_status == "OK" and t_time then
+            if not best_tcp or t_time < (best_tcp.tcp_time or 9999) then
+                best_tcp = entry
+            end
+        end
+
+        -- Evaluate best UDP (clean, working, not poisoned, lowest latency)
         if u_status == "OK" and u_time then
+            if not best_udp or u_time < (best_udp.udp_time or 9999) then
+                best_udp = entry
+            end
             if p.type == "domestic" then
-                if not best_direct or u_time < (best_direct.udp_time or 9999) then
-                    best_direct = entry
+                if not best_domestic or u_time < (best_domestic.udp_time or 9999) then
+                    best_domestic = entry
                 end
-            elseif not best_direct and p.type == "foreign" then
-                best_direct = entry
             end
         end
 
@@ -129,9 +140,14 @@ function M.run(opts)
         end
     end
 
+    best_direct = best_domestic or best_udp
+
     return {
         results = results,
         best_doh = best_doh,
+        best_tcp = best_tcp,
+        best_udp = best_udp,
+        best_domestic = best_domestic,
         best_direct = best_direct
     }
 end

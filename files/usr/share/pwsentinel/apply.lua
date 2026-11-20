@@ -23,9 +23,15 @@ function M.restore_backup()
     return false
 end
 
-local function test_health()
-    local code = os.execute("curl -s --connect-timeout 5 --max-time 8 https://www.google.com/generate_204 >/dev/null 2>&1")
-    return code == 0
+local function verify_health(timeout_sec)
+    timeout_sec = timeout_sec or 15
+    local start_t = os.time()
+    while os.time() - start_t < timeout_sec do
+        local code = os.execute("curl -s --connect-timeout 3 --max-time 5 https://www.google.com/generate_204 >/dev/null 2>&1")
+        if code == 0 then return true end
+        os.execute("sleep 2")
+    end
+    return false
 end
 
 function M.apply(node_id, doh_url, doh_ip, direct_dns_ip)
@@ -49,7 +55,7 @@ function M.apply(node_id, doh_url, doh_ip, direct_dns_ip)
     end
 
     if direct_dns_ip then
-        print(string.format("Step 4: Updating PassWall 2 direct DNS -> %s", direct_dns_ip))
+        print(string.format("Step 4: Direct DNS candidate identified -> %s", direct_dns_ip))
     end
 
     uci:commit("passwall2")
@@ -57,9 +63,9 @@ function M.apply(node_id, doh_url, doh_ip, direct_dns_ip)
     print("Step 5: Reloading PassWall 2 daemon (zero-downtime reload)...")
     os.execute("/etc/init.d/passwall2 reload >/dev/null 2>&1")
 
-    print("Step 6: Armed verification timer (testing connectivity within 10s)...")
-    os.execute("sleep 4")
-    if test_health() then
+    print("Step 6: Armed verification timer (verifying connectivity up to 15s)...")
+    os.execute("sleep 3")
+    if verify_health(15) then
         print("Verification SUCCESS! Internet connection is healthy and responsive.")
         return true, "Successfully applied and verified."
     else

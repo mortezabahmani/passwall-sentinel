@@ -111,15 +111,15 @@ return view.extend({
 
 			var html = '<div style="margin-top:20px;">';
 
-			// Table 1: Node Benchmark
-			html += '<h3>🏆 Node Benchmark Rankings (Tested via Direct WAN)</h3>';
+			// --- TABLE 1: TOP 5 NODE BENCHMARK RANKINGS ---
+			html += '<h3>🏆 Top Candidate Nodes Ranking (Tested 100% via Direct WAN)</h3>';
 			html += '<div class="table" style="width:100%; overflow-x:auto;">' +
 				'<table class="table cbi-section-table" style="width:100%;">' +
 				'<tr class="tr cbi-section-table-titles">' +
 					'<th class="th">Rank</th>' +
 					'<th class="th">Node Remarks</th>' +
 					'<th class="th">Protocol / Transport</th>' +
-					'<th class="th">TCP Ping (Direct)</th>' +
+					'<th class="th">Direct TCP Ping</th>' +
 					'<th class="th">TTFB (Real Bypass)</th>' +
 					'<th class="th">Hardware Score</th>' +
 					'<th class="th">Status</th>' +
@@ -129,11 +129,11 @@ return view.extend({
 			if (nodes.length === 0) {
 				html += '<tr class="tr"><td class="td" colspan="7">No active candidate nodes recorded.</td></tr>';
 			} else {
-				for (var i = 0; i < nodes.length; i++) {
+				for (var i = 0; i < Math.min(5, nodes.length); i++) {
 					var n = nodes[i];
 					var is_best = (i === 0 && n.status === 'OK');
-					var row_style = is_best ? 'background:rgba(40,167,69,0.1); font-weight:bold;' : '';
-					var badge = is_best ? '<span class="badge" style="background:#28a745;color:#fff;padding:2px 6px;border-radius:4px;">Winner #1</span>' : '#' + (i + 1);
+					var row_style = is_best ? 'background:rgba(40,167,69,0.12); font-weight:bold;' : '';
+					var badge = is_best ? '<span class="badge" style="background:#28a745;color:#fff;padding:2px 8px;border-radius:4px;font-weight:bold;">🏆 Winner #1</span>' : '<span class="badge" style="background:#6c757d;color:#fff;padding:2px 6px;border-radius:4px;">#' + (i + 1) + '</span>';
 
 					html += '<tr class="tr cbi-section-table-row" style="' + row_style + '">' +
 						'<td class="td">' + badge + '</td>' +
@@ -142,46 +142,91 @@ return view.extend({
 						'<td class="td">' + (typeof(n.tcp_rtt) === 'number' ? n.tcp_rtt.toFixed(1) + ' ms' : 'N/A') + '</td>' +
 						'<td class="td">' + (typeof(n.ttfb) === 'number' ? n.ttfb.toFixed(1) + ' ms' : (n.ttfb || 'N/A')) + '</td>' +
 						'<td class="td">' + (typeof(n.score) === 'number' ? n.score.toFixed(1) : 'N/A') + '</td>' +
-						'<td class="td">' + (n.status === 'OK' ? '<span style="color:#28a745;">✔ OK</span>' : '<span style="color:#dc3545;">✖ ' + n.status + '</span>') + '</td>' +
+						'<td class="td">' + (n.status === 'OK' ? '<span style="color:#28a745;font-weight:bold;">✔ OK</span>' : '<span style="color:#dc3545;font-weight:bold;">✖ ' + n.status + '</span>') + '</td>' +
 					'</tr>';
 				}
 			}
-			html += '</table></div><br>';
+			html += '</table></div><br><br>';
 
-			// Table 2: 50 DNS Benchmark
-			html += '<h3>⚡ 50 Direct DNS Providers Benchmark (Bypassing All Proxies)</h3>';
-			html += '<div class="table" style="width:100%; max-height:480px; overflow-y:auto; overflow-x:auto;">' +
-				'<table class="table cbi-section-table" style="width:100%;">' +
-				'<tr class="tr cbi-section-table-titles" style="position:sticky; top:0; background:#f0f0f0;">' +
-					'<th class="th">Provider Name</th>' +
-					'<th class="th">Type</th>' +
-					'<th class="th">IP Address</th>' +
-					'<th class="th">UDP 53 (Direct)</th>' +
-					'<th class="th">TCP 53 (Direct)</th>' +
-					'<th class="th">DoH 443 (Direct)</th>' +
-					'<th class="th">Assessment</th>' +
-				'</tr>';
-
+			// Process DNS Providers
 			var dns_list = bench_data.dns || [];
-			for (var j = 0; j < dns_list.length; j++) {
-				var d = dns_list[j];
-				var is_best_doh = (bench_data.best_doh && bench_data.best_doh.ip === d.ip);
-				var is_best_dir = (bench_data.best_direct && bench_data.best_direct.ip === d.ip);
+			var foreign_dns = [];
+			var domestic_dns = [];
+
+			var best_doh_item = bench_data.best_doh || null;
+			var best_tcp_item = bench_data.best_tcp || null;
+			var best_udp_item = bench_data.best_udp || null;
+			var best_domestic_item = bench_data.best_domestic || null;
+
+			for (var k = 0; k < dns_list.length; k++) {
+				var item = dns_list[k];
+				if (item.type === 'domestic') {
+					domestic_dns.push(item);
+					if (item.udp_status === 'OK' && typeof(item.udp_time) === 'number') {
+						if (!best_domestic_item || item.udp_time < (best_domestic_item.udp_time || 9999)) {
+							best_domestic_item = item;
+						}
+					}
+				} else {
+					foreign_dns.push(item);
+				}
+
+				if (item.doh_status === 'OK' && typeof(item.doh_time) === 'number') {
+					if (!best_doh_item || item.doh_time < (best_doh_item.doh_time || 9999)) {
+						best_doh_item = item;
+					}
+				}
+				if (item.tcp_status === 'OK' && typeof(item.tcp_time) === 'number') {
+					if (!best_tcp_item || item.tcp_time < (best_tcp_item.tcp_time || 9999)) {
+						best_tcp_item = item;
+					}
+				}
+				if (item.udp_status === 'OK' && typeof(item.udp_time) === 'number') {
+					if (!best_udp_item || item.udp_time < (best_udp_item.udp_time || 9999)) {
+						best_udp_item = item;
+					}
+				}
+			}
+
+			function renderDnsRow(d) {
+				var is_best_doh = (best_doh_item && best_doh_item.ip === d.ip);
+				var is_best_tcp = (best_tcp_item && best_tcp_item.ip === d.ip);
+				var is_best_udp = (best_udp_item && best_udp_item.ip === d.ip);
+				var is_best_dom = (best_domestic_item && best_domestic_item.ip === d.ip);
 
 				var d_style = '';
-				var assess_badge = '';
+				var badges = [];
+
 				if (is_best_doh) {
 					d_style = 'background:rgba(23,162,184,0.12); font-weight:bold;';
-					assess_badge += '<span class="badge" style="background:#17a2b8;color:#fff;padding:2px 6px;border-radius:4px;margin-right:4px;">🏆 Best DoH</span>';
+					badges.push('<span class="badge" style="background:#17a2b8;color:#fff;padding:2px 6px;border-radius:4px;margin-right:4px;">🛡️ Best DoH</span>');
 				}
-				if (is_best_dir) {
-					d_style = 'background:rgba(40,167,69,0.12); font-weight:bold;';
-					assess_badge += '<span class="badge" style="background:#28a745;color:#fff;padding:2px 6px;border-radius:4px;">⚡ Best Direct</span>';
+				if (is_best_tcp) {
+					d_style = d_style || 'background:rgba(111,66,193,0.1); font-weight:bold;';
+					badges.push('<span class="badge" style="background:#6f42c1;color:#fff;padding:2px 6px;border-radius:4px;margin-right:4px;">🚀 Best TCP</span>');
+				}
+				if (is_best_udp) {
+					d_style = d_style || 'background:rgba(40,167,69,0.1); font-weight:bold;';
+					badges.push('<span class="badge" style="background:#28a745;color:#fff;padding:2px 6px;border-radius:4px;margin-right:4px;">⚡ Best UDP</span>');
+				}
+				if (is_best_dom) {
+					d_style = 'background:rgba(0,123,255,0.12); font-weight:bold;';
+					badges.push('<span class="badge" style="background:#007bff;color:#fff;padding:2px 6px;border-radius:4px;margin-right:4px;">🇮🇷 Best Domestic</span>');
+				}
+
+				if (d.udp_status === 'POISONED') {
+					badges.push('<span class="badge" style="background:#dc3545;color:#fff;padding:2px 6px;border-radius:4px;">🚫 Censored / Poisoned</span>');
+				} else if (badges.length === 0) {
+					if (d.udp_status === 'OK' || d.tcp_status === 'OK' || d.doh_status === 'OK') {
+						badges.push('<span style="color:#28a745;">Clean & Reachable</span>');
+					} else {
+						badges.push('<span style="color:#6c757d;">Unreachable</span>');
+					}
 				}
 
 				var udp_str = '-';
 				if (d.udp_status === 'POISONED') {
-					udp_str = '<span style="color:#dc3545;font-weight:bold;">POISONED (Fake IP)</span>';
+					udp_str = '<span style="color:#dc3545;font-weight:bold;">POISONED (188.114.98.0)</span>';
 				} else if (d.udp_status === 'OK' && typeof(d.udp_time) === 'number') {
 					udp_str = '<span style="color:#28a745;">' + d.udp_time.toFixed(1) + ' ms</span>';
 				} else {
@@ -191,18 +236,54 @@ return view.extend({
 				var tcp_str = d.tcp_status === 'OK' && typeof(d.tcp_time) === 'number' ? d.tcp_time.toFixed(1) + ' ms' : '<span style="color:#6c757d;">' + (d.tcp_status || 'FAIL') + '</span>';
 				var doh_str = d.doh_status === 'OK' && typeof(d.doh_time) === 'number' ? '<span style="color:#17a2b8;">' + d.doh_time.toFixed(1) + ' ms</span>' : '<span style="color:#6c757d;">' + (d.doh_status || 'N/A') + '</span>';
 
-				html += '<tr class="tr cbi-section-table-row" style="' + d_style + '">' +
+				return '<tr class="tr cbi-section-table-row" style="' + d_style + '">' +
 					'<td class="td"><strong>' + d.name + '</strong></td>' +
-					'<td class="td"><span style="text-transform:capitalize;">' + (d.type || 'foreign') + '</span></td>' +
 					'<td class="td"><code>' + d.ip + '</code></td>' +
 					'<td class="td">' + udp_str + '</td>' +
 					'<td class="td">' + tcp_str + '</td>' +
 					'<td class="td">' + doh_str + '</td>' +
-					'<td class="td">' + (assess_badge || (d.udp_status === 'POISONED' ? '<span style="color:#dc3545;">Filtered</span>' : 'Healthy')) + '</td>' +
+					'<td class="td">' + badges.join(' ') + '</td>' +
 				'</tr>';
 			}
 
+			// --- TABLE 2: FOREIGN & INTERNATIONAL DNS (DIRECT WAN) ---
+			html += '<h3>🛡️ Foreign & International DNS Providers (Direct WAN Audit)</h3>';
+			html += '<p style="color:#6c757d;margin-bottom:8px;">Evaluates direct UDP 53 poisoning, TCP 53 fallback, and secure DoH 443 resolution against censorship firewalls.</p>';
+			html += '<div class="table" style="width:100%; max-height:420px; overflow-y:auto; overflow-x:auto;">' +
+				'<table class="table cbi-section-table" style="width:100%;">' +
+				'<tr class="tr cbi-section-table-titles" style="position:sticky; top:0; background:#f0f0f0; z-index:2;">' +
+					'<th class="th">Provider Name</th>' +
+					'<th class="th">IP Address</th>' +
+					'<th class="th">UDP 53 (Direct)</th>' +
+					'<th class="th">TCP 53 (Direct)</th>' +
+					'<th class="th">DoH 443 (Direct)</th>' +
+					'<th class="th">Assessment & Best Category</th>' +
+				'</tr>';
+
+			for (var j = 0; j < foreign_dns.length; j++) {
+				html += renderDnsRow(foreign_dns[j]);
+			}
+			html += '</table></div><br><br>';
+
+			// --- TABLE 3: IRANIAN DOMESTIC & ANTI-SANCTION RESOLVERS ---
+			html += '<h3>🇮🇷 Domestic Iranian & Anti-Sanction DNS Providers (سامانه‌های تحریم‌شکن و داخلی)</h3>';
+			html += '<p style="color:#6c757d;margin-bottom:8px;">Domestic anti-sanction services (Shecan, Electro, Radar Game, 403.online, Begzar) bypass foreign 403 sanctions without proxying overhead.</p>';
+			html += '<div class="table" style="width:100%; overflow-x:auto;">' +
+				'<table class="table cbi-section-table" style="width:100%;">' +
+				'<tr class="tr cbi-section-table-titles" style="background:#e8f4f8;">' +
+					'<th class="th">Domestic Resolver</th>' +
+					'<th class="th">IP Address</th>' +
+					'<th class="th">UDP 53 (Direct)</th>' +
+					'<th class="th">TCP 53 (Direct)</th>' +
+					'<th class="th">DoH 443 (Direct)</th>' +
+					'<th class="th">Assessment & Best Category</th>' +
+				'</tr>';
+
+			for (var m_idx = 0; m_idx < domestic_dns.length; m_idx++) {
+				html += renderDnsRow(domestic_dns[m_idx]);
+			}
 			html += '</table></div></div>';
+
 			return html;
 		};
 
@@ -291,22 +372,43 @@ return view.extend({
 				if (btnApply) {
 					btnApply.addEventListener('click', function(ev) {
 						ev.preventDefault();
+						var applyPre = E('pre', {
+							'style': 'max-height:320px; overflow-y:auto; background:#181818; color:#38ef7d; padding:12px; border-radius:6px; font-size:0.85em; font-family:monospace; white-space:pre-wrap; margin-top:10px;'
+						}, _('Initiating configuration apply with safety snapshot...\n'));
+
 						ui.showModal(_('Applying Recommendation...'), [
 							E('p', { 'class': 'spinning' }, _('Applying best node and DNS to PassWall 2 with 60-second armed rollback...')),
+							applyPre
 						]);
-						fs.exec_direct('/usr/bin/pwsentinel', ['apply'], 'text').then(function(res) {
-							ui.showModal(_('Apply Result'), [
-								E('pre', { 'style': 'padding:10px; background:#f8f9fa; border:1px solid #ddd; white-space:pre-wrap;' }, res || 'Success'),
+
+						fs.exec_direct('/usr/bin/pwsentinel', ['apply'], 'text', false, true, function(xhr) {
+							if (xhr.responseText) {
+								applyPre.textContent = xhr.responseText;
+								applyPre.scrollTop = applyPre.scrollHeight;
+							}
+						}).then(function(res) {
+							applyPre.textContent = res || _('Applied successfully.');
+							applyPre.scrollTop = applyPre.scrollHeight;
+							ui.showModal(_('Apply Finished'), [
+								applyPre,
 								E('div', { 'class': 'right', 'style': 'margin-top:12px;' }, [
 									E('button', {
 										'class': 'btn btn-primary',
 										'click': function() { location.reload(); }
-									}, _('Done'))
+									}, _('Done & Refresh View'))
 								])
 							]);
 						}).catch(function(err) {
-							ui.addNotification(null, E('p', _('Apply failed: ') + (err.message || err)), 'error');
-							ui.hideModal();
+							var msg = err.message || String(err);
+							if (msg.indexOf('aborted') !== -1 || msg.indexOf('timed out') !== -1) {
+								applyPre.textContent += '\n\n' + _('PassWall 2 reloaded its routing core. Network connection momentarily refreshed.\nVerifying router state and reloading page in 4 seconds...');
+								setTimeout(function() {
+									location.reload();
+								}, 4000);
+							} else {
+								ui.addNotification(null, E('p', _('Apply failed: ') + msg), 'error');
+								ui.hideModal();
+							}
 						});
 					});
 				}
